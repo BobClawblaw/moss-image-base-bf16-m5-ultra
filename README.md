@@ -12,6 +12,8 @@ there is no server.
 
 ![The fox prompt at 1024x1024, seed 42: the publisher's torch pipeline (left), ours (right)](evidence/fox-1024x1024-42/side.png)
 
+More pictures, with their prompts and seeds, are in the [gallery](evidence/gallery/README.md).
+
 ## Quick start
 
 Needs an M5 Mac (the M5's tensor units; M1-M4 are untested), Python 3.11+, git, `hf` and
