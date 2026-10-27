@@ -1,0 +1,32 @@
+# The recipe's defaults. `local.toml` next to this file overrides them for one Mac (copy local.example.toml); an
+# environment variable of the same name in upper case overrides both (STEPS=30 python3 -m mac generate "...").
+
+[model]
+# OpenMOSS's release as published (bf16 transformer and prompt encoder, float32 decoder; nothing is converted):
+# hf download OpenMOSS-Team/MOSS-Image-Base --revision <model_revision> --local-dir <model_dir>
+model_repo = "OpenMOSS-Team/MOSS-Image-Base"
+model_revision = "85975793d8b3d432f1b6e27f352abaa4c2a4c0d3"
+model_dir = "~/models/MOSS-Image-Base"
+
+[engine]
+# TensorFold's Metal runtime with the moss_image family: a worktree of tensorfold_src at tensorfold_sha, built by
+# `python3 -m mac build` under tf_cache; `binary` names a built tf-moss-image instead
+tensorfold_src = "~/github/TensorFold"   # a clone holding tensorfold_sha (github.com/BobClawblaw/TensorFold)
+tensorfold_sha = "0b69e1271b40271b70a484d00c69c8e0548917b4"            # branch moss-image
+zig = "zig"                              # Zig 0.17.0
+zig_cpu = "native"
+binary = ""
+
+[local]
+tf_cache = "~/.cache/moss-image"
+# torch, diffusers and transformers for the prompt encoder and the decoder (python3 -m mac setup)
+python = "python3"
+
+[sample]
+# The card's sampling: 50 Euler steps, guidance 3, an empty negative prompt whose pass skips block 22 (fixed)
+width = 1024
+height = 1024
+steps = 50
+seed = 42
+negative = ""
+device = "mps"                           # where torch runs the encoder and the decoder

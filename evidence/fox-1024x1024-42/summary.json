@@ -1,0 +1,11 @@
+{
+ "ours_vs_torch_bf16": {
+  "psnr_db": 48.52,
+  "mean_abs": 0.622,
+  "max_abs": 39
+ },
+ "worst_step_cosine": {
+  "prompt": 0.99973184,
+  "negative": 0.99973621
+ }
+}
