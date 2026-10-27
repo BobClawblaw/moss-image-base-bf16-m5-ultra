@@ -7,5 +7,17 @@
  "worst_step_cosine": {
   "prompt": 0.99984552,
   "negative": 0.99981044
- }
+ },
+ "speed": {
+  "engine": "772283b6 (code; measured on the same tree)",
+  "ours_denoise_s_three_runs": [
+   48.326,
+   48.602,
+   49.238
+  ],
+  "ours_forward_s_median": 0.486,
+  "torch_bf16_forward_s_median": 0.76,
+  "ratio": 1.56
+ },
+ "peak_footprint_bytes": 11347779936
 }

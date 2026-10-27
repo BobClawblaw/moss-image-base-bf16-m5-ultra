@@ -1,18 +1,19 @@
 # Gallery
 
-Five pictures made by this recipe's `python3 -m mac generate` on one M5 Ultra: engine commit 0b69e127, checkpoint
-revision 85975793, the card's defaults (50 steps, guidance 3, the empty negative prompt skipping block 22). Nothing was
+Five pictures made by this recipe's `python3 -m mac generate` on one M5 Ultra from checkpoint
+revision 85975793, at the card's defaults (50 steps, guidance 3, the empty negative prompt skipping block 22). Nothing was
 picked or retouched: each is the one picture its prompt and seed gave.
 
-The transformer times were taken while another job shared the GPU, so they are a guide, not a measurement.
+They were made on engine 0b69e127, and made again on the pinned 772283b6 with byte-identical results. The times are
+the second run's, with no other GPU work.
 
 | picture | size | seed | transformer |
 |---|---|---|---|
-| [1-bookshop.png](1-bookshop.png) | 1024 x 1024 | 42 | 47.4 s |
-| [2-portrait.png](2-portrait.png) | 1024 x 1024 | 7 | 47.4 s |
-| [3-sign.png](3-sign.png) | 1024 x 1024 | 42 | 49.6 s |
-| [4-fridge-zh.png](4-fridge-zh.png) | 1200 x 880 | 7 | 55.4 s |
-| [5-valley.png](5-valley.png) | 1344 x 768 | 3 | 52.8 s |
+| [1-bookshop.png](1-bookshop.png) | 1024 x 1024 | 42 | 47.2 s |
+| [2-portrait.png](2-portrait.png) | 1024 x 1024 | 7 | 47.3 s |
+| [3-sign.png](3-sign.png) | 1024 x 1024 | 42 | 48.6 s |
+| [4-fridge-zh.png](4-fridge-zh.png) | 1200 x 880 | 7 | 48.8 s |
+| [5-valley.png](5-valley.png) | 1344 x 768 | 3 | 45.7 s |
 
 `4-fridge-zh.png` is byte for byte the picture of the `fridge-zh-1200x880-7` check, made in an earlier session.
 

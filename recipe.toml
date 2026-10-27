@@ -12,7 +12,7 @@ model_dir = "~/models/MOSS-Image-Base"
 # TensorFold's Metal runtime with the moss_image family: a worktree of tensorfold_src at tensorfold_sha, built by
 # `python3 -m mac build` under tf_cache; `binary` names a built tf-moss-image instead
 tensorfold_src = "~/github/TensorFold"   # a clone holding tensorfold_sha (github.com/BobClawblaw/TensorFold)
-tensorfold_sha = "0b69e1271b40271b70a484d00c69c8e0548917b4"            # branch moss-image
+tensorfold_sha = "772283b6b38d2f274e33e733df089ef2d6edc882"            # branch moss-image
 zig = "zig"                              # Zig 0.17.0
 zig_cpu = "native"
 binary = ""
