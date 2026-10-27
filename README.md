@@ -57,7 +57,7 @@ peak was not measured.
 
 ## What works, and how it was checked
 
-All on one M5 Ultra (256 GB, macOS 27), engine commit 772283b6, checkpoint revision 85975793. The pinned 88626ebd
+All on one M5 Ultra (256 GB, macOS 27), engine commit 772283b6, checkpoint revision 85975793. The pinned 6aa59372
 adds review fixes (the pipeline file's hash check, a log line, a test tool's leak) and gives the identical latents. The reference is the
 checkpoint's own pipeline on torch 2.14.1 with MPS in bf16, run by `tools/zig/moss_image_case.py` in the engine's
 tree. MPS has no float64, so the case tool computes the time sinusoid (float64 by the publisher) on the host; every
@@ -75,8 +75,10 @@ Two cases at the card's defaults:
   torch bf16's own (1.602e-4, 1.715e-4), and ours is the closer at 25 and 27 of the 50 steps.
 - **Pictures.** Ours against the pipeline's: 48.52 dB PSNR for the fox, 28.93 dB for the sticky note. Fifty guided
   steps magnify bf16 rounding into different fine detail (the note's text and the scene stay; a cabinet edge moves),
-  so the ruler is a float32 run of the whole schedule. Over 8 cases (both prompts, seeds 42/7, 1, 2, 3), ours is the
-  closer to it in 6, at a mean of 32.3 dB PSNR against torch bf16's 31.4 dB. Every row is in
+  so the ruler is a float32 run of the whole schedule. Over 8 cases (both prompts, seeds 42/7, 1, 2, 3), with the
+  transformer in float32 on torch's bf16 encoder rows, ours is the closer to it in 6, at a mean of 32.3 dB PSNR against
+  torch bf16's 31.4 dB. With the encoder in float32 too, torch bf16 averages 32.5 dB and ours 31.2 dB: six cases are
+  within 0.5 dB or favor ours, and two sticky-note seeds favor torch's by 4.6 and 8.7 dB. Every row is in
   [evidence/seeds.md](evidence/seeds.md). Those 8 ran on the earlier build 0b69e127; 772283b6 gives byte-identical
   latents on the fox and the sticky note, and the identical gallery pictures.
 - **Repeats.** The same step run twice with another between gives identical bytes; `generate` and `check` give the
@@ -106,6 +108,6 @@ reference's `reference.json` and the side-by-side pictures.
 | | |
 |---|---|
 | checkpoint | `OpenMOSS-Team/MOSS-Image-Base` @ `85975793d8b3d432f1b6e27f352abaa4c2a4c0d3` (Apache 2.0) |
-| engine | BobClawblaw/TensorFold @ `88626ebdb1a79b07633defec31121ec6bcc625d0` (branch `moss-image`) |
+| engine | BobClawblaw/TensorFold @ `6aa59372087ae022c36d0a870ea594ca567376ac` (branch `moss-image`) |
 | torch side | torch 2.14.1, diffusers 0.42.0, transformers 5.21.0 |
 | Zig | 0.17.0 |
