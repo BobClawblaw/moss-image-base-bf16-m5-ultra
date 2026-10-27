@@ -78,8 +78,9 @@ Two cases at the card's defaults:
   so the ruler is a float32 run of the whole schedule. Over 8 cases (both prompts, seeds 42/7, 1, 2, 3), with the
   transformer in float32 on torch's bf16 encoder rows, ours is the closer to it in 6, at a mean of 32.3 dB PSNR against
   torch bf16's 31.4 dB. With the encoder in float32 too, torch bf16 averages 32.5 dB and ours 31.2 dB: six cases are
-  within 0.5 dB or favor ours, and two sticky-note seeds favor torch's by 4.6 and 8.7 dB. Every row is in
-  [evidence/seeds.md](evidence/seeds.md). Those 8 ran on the earlier build 0b69e127; 772283b6 gives byte-identical
+  within 0.5 dB or favor ours, and two sticky-note seeds favor torch's by 4.6 and 8.7 dB. That ruler came from a
+  follow-up tool, `exact --fp32-encoder`, which the pinned engine's case tool does not have; it comes with the native
+  prompt encoder (TensorFold issue #1459). The first ruler's rows are in [evidence/seeds.md](evidence/seeds.md). Those 8 ran on the earlier build 0b69e127; 772283b6 gives byte-identical
   latents on the fox and the sticky note, and the identical gallery pictures.
 - **Repeats.** The same step run twice with another between gives identical bytes; `generate` and `check` give the
   identical PNG for the same prompt and seed.
