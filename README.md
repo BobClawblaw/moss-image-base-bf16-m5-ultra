@@ -6,6 +6,10 @@ the work, runs on TensorFold's Metal runtime (the `moss_image` family). The prom
 image decoder (FLUX.2's small decoder) run in torch, through the publisher's own `pipeline_moss_image.py`. Nothing is
 converted: the transformer and encoder are bf16 and the decoder float32, as released.
 
+The torch steps import and run Python from the checkpoint itself: its `pipeline_moss_image.py`, through
+`tools/zig/moss_image_case.py` in the engine's tree. That tool checks the file's sha256 against revision 85975793's
+(`1dac1aca…8b31`) before importing it, and refuses any other file. Download the checkpoint at that revision (below).
+
 The family is on branch `moss-image` of [BobClawblaw/TensorFold](https://github.com/BobClawblaw/TensorFold); it is
 not on TensorFold main. This recipe builds its pinned commit. It runs one picture at a time from the command line;
 there is no server.
@@ -53,7 +57,8 @@ peak was not measured.
 
 ## What works, and how it was checked
 
-All on one M5 Ultra (256 GB, macOS 27), engine commit 772283b6, checkpoint revision 85975793. The reference is the
+All on one M5 Ultra (256 GB, macOS 27), engine commit 772283b6, checkpoint revision 85975793. The pinned 88626ebd
+adds review fixes (the pipeline file's hash check, a log line, a test tool's leak) and gives the identical latents. The reference is the
 checkpoint's own pipeline on torch 2.14.1 with MPS in bf16, run by `tools/zig/moss_image_case.py` in the engine's
 tree. MPS has no float64, so the case tool computes the time sinusoid (float64 by the publisher) on the host; every
 other step runs unchanged.
@@ -101,6 +106,6 @@ reference's `reference.json` and the side-by-side pictures.
 | | |
 |---|---|
 | checkpoint | `OpenMOSS-Team/MOSS-Image-Base` @ `85975793d8b3d432f1b6e27f352abaa4c2a4c0d3` (Apache 2.0) |
-| engine | BobClawblaw/TensorFold @ `772283b6b38d2f274e33e733df089ef2d6edc882` (branch `moss-image`) |
+| engine | BobClawblaw/TensorFold @ `88626ebdb1a79b07633defec31121ec6bcc625d0` (branch `moss-image`) |
 | torch side | torch 2.14.1, diffusers 0.42.0, transformers 5.21.0 |
 | Zig | 0.17.0 |
