@@ -10,8 +10,8 @@ The torch steps import and run Python from the checkpoint itself: its `pipeline_
 `tools/zig/moss_image_case.py` in the engine's tree. That tool checks the file's sha256 against revision 85975793's
 (`1dac1aca…8b31`) before importing it, and refuses any other file. Download the checkpoint at that revision (below).
 
-The family is on branch `moss-image` of [BobClawblaw/TensorFold](https://github.com/BobClawblaw/TensorFold); it is
-not on TensorFold main. This recipe builds its pinned commit. It runs one picture at a time from the command line;
+The family is on [TensorFold](https://github.com/ashhart/TensorFold) main (it landed in #1457). This recipe builds
+its pinned commit. It runs one picture at a time from the command line;
 there is no server.
 
 ![The fox prompt at 1024x1024, seed 42: the publisher's torch pipeline (left), ours (right)](evidence/fox-1024x1024-42/side.png)
@@ -24,7 +24,7 @@ Needs an M5 Mac: the engine runs on the M5's tensor units and refuses an earlier
 Python 3.11+, git, `hf` and [Zig 0.17.0](https://ziglang.org/download/), and about 26 GB of disk for the checkpoint.
 
 ```bash
-git clone https://github.com/BobClawblaw/TensorFold ~/github/TensorFold
+git clone https://github.com/ashhart/TensorFold ~/github/TensorFold
 hf download OpenMOSS-Team/MOSS-Image-Base --revision 85975793d8b3d432f1b6e27f352abaa4c2a4c0d3 --local-dir ~/models/MOSS-Image-Base
 cp local.example.toml local.toml      # then set zig, python (3.11+) and paths, if yours differ
 python3 -m mac setup                  # torch 2.14.1, diffusers 0.42.0, transformers 5.21.0 in a venv under ~/.cache/moss-image
@@ -57,8 +57,9 @@ peak was not measured.
 
 ## What works, and how it was checked
 
-All on one M5 Ultra (256 GB, macOS 27), engine commit 772283b6, checkpoint revision 85975793. The pinned 6aa59372
-adds review fixes (the pipeline file's hash check, a log line, a test tool's leak) and gives the identical latents. The reference is the
+All on one M5 Ultra (256 GB, macOS 27), engine commit 772283b6, checkpoint revision 85975793. The pinned 2551c573,
+TensorFold main with the family as it landed (review fixes added: the pipeline file's hash check, a log line, a test
+tool's leak), gives the identical latents. The reference is the
 checkpoint's own pipeline on torch 2.14.1 with MPS in bf16, run by `tools/zig/moss_image_case.py` in the engine's
 tree. MPS has no float64, so the case tool computes the time sinusoid (float64 by the publisher) on the host; every
 other step runs unchanged.
@@ -109,6 +110,6 @@ reference's `reference.json` and the side-by-side pictures.
 | | |
 |---|---|
 | checkpoint | `OpenMOSS-Team/MOSS-Image-Base` @ `85975793d8b3d432f1b6e27f352abaa4c2a4c0d3` (Apache 2.0) |
-| engine | BobClawblaw/TensorFold @ `6aa59372087ae022c36d0a870ea594ca567376ac` (branch `moss-image`) |
+| engine | ashhart/TensorFold @ `2551c573fd9f9561fda10d2a0f697e128f7d0359` (main) |
 | torch side | torch 2.14.1, diffusers 0.42.0, transformers 5.21.0 |
 | Zig | 0.17.0 |
