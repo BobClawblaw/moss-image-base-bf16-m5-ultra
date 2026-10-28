@@ -5,7 +5,8 @@ revision 85975793, at the card's defaults (50 steps, guidance 3, the empty negat
 picked or retouched: each is the one picture its prompt and seed gave.
 
 They were made on engine 7beb5243, which encodes the prompt on Metal as well as running the transformer, and made again
-on the pinned 6f05bcd9 (the same code rebased) with byte-identical results. Times are not given here: the runs shared the Mac with other builds.
+on 6f05bcd9 (the same code rebased) and on the pinned 198ed906 (rebased again, with the encoder's per-layer check
+added) with byte-identical results. Times are not given here: the runs shared the Mac with other builds.
 The recipe's measured speeds are in the [README](../../README.md).
 
 | picture | size | seed |
