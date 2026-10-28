@@ -51,19 +51,19 @@ name in upper case overrides both (`STEPS=30 python3 -m mac generate "..."`). `g
 
 The guidance is the card's and fixed: scale 3, two transformer passes a step, the negative one skipping block 22.
 
-**Time and memory** for a 1024x1024 picture, three prompts on the pinned engine with no other GPU work: 2.0 to 2.4 s
+**Time and memory** for a 1024x1024 picture, three prompts on the pinned engine with no other GPU work: 1.9 to 2.3 s
 for torch to draw the starting noise and the schedule, then the engine's process (49 to 50 s): 0.6 s to load the
-encoder and 0.24 to 0.26 s to encode both prompts, then 47 to 49 s for the transformer's 50 steps (100 passes). Then
-2.5 to 2.7 s for torch to decode. The engine's process peaks at a 16.7 GB footprint, the encoder's 16 GB of bf16
+encoder and 0.24 to 0.26 s to encode both prompts, then 47 to 48 s for the transformer's 50 steps (100 passes). Then
+2.4 to 2.5 s for torch to decode. The engine's process peaks at a 16.7 GB footprint, the encoder's 16 GB of bf16
 weights; it frees them before loading the transformer (9.5 GB, 11.3 GB at its peak).
 
 ## What works, and how it was checked
 
 All on one M5 Ultra (256 GB, macOS 27), checkpoint revision 85975793. The transformer was measured on engine commit
-772283b6; TensorFold main's 2551c573, then 6f05bcd9 (which adds the encoder) and the pinned 198ed906, give the
-identical latents from torch's prompt rows. The reference is the checkpoint's own pipeline on torch 2.14.1 with MPS in
-bf16, run by `tools/zig/moss_image_case.py` in the engine's tree. MPS has no float64, so the case tool computes the
-time sinusoid (float64 by the publisher) on the host; every other step runs unchanged.
+772283b6; TensorFold main's 2551c573, then 6f05bcd9 (which adds the encoder), 198ed906 and the pinned 92c82988, give
+the identical latents from torch's prompt rows. The reference is the checkpoint's own pipeline on torch 2.14.1 with
+MPS in bf16, run by `tools/zig/moss_image_case.py` in the engine's tree. MPS has no float64, so the case tool computes
+the time sinusoid (float64 by the publisher) on the host; every other step runs unchanged.
 
 Two cases at the card's defaults:
 - A fox at 1024x1024, seed 42 (`cases/fox.txt`).
@@ -115,6 +115,6 @@ reference's `reference.json` and the side-by-side pictures.
 | | |
 |---|---|
 | checkpoint | `OpenMOSS-Team/MOSS-Image-Base` @ `85975793d8b3d432f1b6e27f352abaa4c2a4c0d3` (Apache 2.0) |
-| engine | BobClawblaw/TensorFold @ `198ed90653647b652936acbc9fd764cb5fd91096` (branch `moss-image-encoder`) |
+| engine | BobClawblaw/TensorFold @ `92c829887ed66c685ab800e36376a18bc1ddf44d` (branch `moss-image-encoder`) |
 | torch side | torch 2.14.1, diffusers 0.42.0, transformers 5.21.0 |
 | Zig | 0.17.0 |

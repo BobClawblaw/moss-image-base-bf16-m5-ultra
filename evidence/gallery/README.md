@@ -4,9 +4,10 @@ Five pictures made by this recipe's `python3 -m mac generate` on one M5 Ultra fr
 revision 85975793, at the card's defaults (50 steps, guidance 3, the empty negative prompt skipping block 22). Nothing was
 picked or retouched: each is the one picture its prompt and seed gave.
 
-They were made on engine 7beb5243, which encodes the prompt on Metal as well as running the transformer, and made again
-on 6f05bcd9 (the same code rebased) and on the pinned 198ed906 (rebased again, with the encoder's per-layer check
-added) with byte-identical results. Times are not given here: the runs shared the Mac with other builds.
+They were made on engine 7beb5243, which encodes the prompt on Metal as well as running the transformer, and made
+again on 6f05bcd9 (the same code rebased), on 198ed906 (rebased again, with the encoder's per-layer check added) and
+on the pinned 92c82988 (rebased onto a later main) with byte-identical results. Times are not given here: the runs
+shared the Mac with other builds.
 The recipe's measured speeds are in the [README](../../README.md).
 
 | picture | size | seed |
