@@ -1,23 +1,11 @@
 {
  "ours_vs_torch_bf16": {
-  "psnr_db": 28.93,
-  "mean_abs": 4.253,
-  "max_abs": 155
+  "psnr_db": 28.71,
+  "mean_abs": 5.781,
+  "max_abs": 210
  },
  "worst_step_cosine": {
-  "prompt": 0.99984552,
-  "negative": 0.99981044
- },
- "speed": {
-  "engine": "772283b6 (code; measured on the same tree)",
-  "ours_denoise_s_three_runs": [
-   48.326,
-   48.602,
-   49.238
-  ],
-  "ours_forward_s_median": 0.486,
-  "torch_bf16_forward_s_median": 0.76,
-  "ratio": 1.56
- },
- "peak_footprint_bytes": 11347779936
+  "prompt": 0.99981232,
+  "negative": 0.99978675
+ }
 }

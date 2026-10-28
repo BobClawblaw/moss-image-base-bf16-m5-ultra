@@ -67,17 +67,22 @@ def generate(s: Settings, args) -> int:
     with tempfile.TemporaryDirectory(prefix="moss-image-") as tmp:
         prompt = Path(tmp) / "prompt.txt"
         prompt.write_text(args.prompt)
+        negative = Path(tmp) / "negative.txt"
+        negative.write_text(args.negative)
         mark = time.perf_counter()
-        run(tool(s, "start", s.model, tmp, "--prompt-file", prompt, "--negative", args.negative, "--seed",
-                 str(args.seed), "--steps", str(args.steps), "--device", s.device, *size))
-        encoded = time.perf_counter()
-        run([s.engine, s.model / "transformer", Path(tmp) / "case.safetensors", tmp])
+        # the schedule and the noise alone: the engine encodes both prompts itself
+        run(tool(s, "start", s.model, tmp, "--no-encoder", "--seed", str(args.seed), "--steps", str(args.steps),
+                 "--device", s.device, *size))
+        started = time.perf_counter()
+        run([s.engine, s.model / "transformer", Path(tmp) / "case.safetensors", tmp, "--prompt", prompt,
+             "--negative", negative])
         denoised = time.perf_counter()
         run(tool(s, "decode", s.model, Path(tmp) / "latents.f32", out, "--device", s.device, *size))
         done = time.perf_counter()
         timing = json.loads((Path(tmp) / "run.json").read_text())
-    print(json.dumps({"image": str(out), "encode_s": round(encoded - mark, 1), "transformer_s": timing["denoise_s"],
-                      "denoise_process_s": round(denoised - encoded, 1), "decode_s": round(done - denoised, 1)}))
+    print(json.dumps({"image": str(out), "start_s": round(started - mark, 1), "encode_s": timing["encode_s"],
+                      "transformer_s": timing["denoise_s"], "engine_process_s": round(denoised - started, 1),
+                      "decode_s": round(done - denoised, 1)}))
     return 0
 
 
@@ -90,12 +95,17 @@ def check(s: Settings, args) -> int:
     run(tool(s, "case", s.model, out, "--prompt-file", Path(args.prompt_file).resolve(), "--seed", str(args.seed),
              "--steps", str(args.steps), "--device", s.device, *size))
     with open(out / "engine.log", "w") as log:
-        run([s.engine, s.model / "transformer", out / "case.safetensors", out], stderr=log)
+        # ours encodes the prompt itself; the case's torch rows are the reference's
+        run([s.engine, s.model / "transformer", out / "case.safetensors", out, "--prompt",
+             Path(args.prompt_file).resolve()], stderr=log)
     run(tool(s, "decode", s.model, out / "latents.f32", out / "zig.png", "--device", s.device, *size))
     pairs = [("ours_vs_torch_bf16", "reference.png", "zig.png")]
     if args.exact:
-        run(tool(s, "exact", s.model, out, "--steps", str(args.steps), "--device", s.device))
-        pairs += [("torch_bf16_vs_fp32", "exact.png", "reference.png"), ("ours_vs_fp32", "exact.png", "zig.png")]
+        # float32 throughout, the prompt encoder too
+        run(tool(s, "exact", s.model, out, "--steps", str(args.steps), "--device", s.device, "--fp32-encoder",
+                 Path(args.prompt_file).resolve()))
+        pairs += [("torch_bf16_vs_fp32", "exact_fp32_encoder.png", "reference.png"),
+                  ("ours_vs_fp32", "exact_fp32_encoder.png", "zig.png")]
     summary = {}
     for key, a, b in pairs:
         got = subprocess.run([str(c) for c in tool(s, "compare", out / a, out / b)], check=True, capture_output=True,
