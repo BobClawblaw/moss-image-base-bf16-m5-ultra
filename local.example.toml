@@ -1,6 +1,7 @@
 # Copy to local.toml (git-ignored) and change what differs on this Mac.
 [model]
-model_dir = "~/models/MOSS-Image-Base"
+base_dir = "~/models/MOSS-Image-Base"
+sft_dir = "~/models/MOSS-Image-SFT"
 
 [engine]
 tensorfold_src = "~/github/TensorFold"   # a clone of github.com/ashhart/TensorFold holding tensorfold_sha

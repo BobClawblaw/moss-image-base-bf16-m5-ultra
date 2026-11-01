@@ -6,8 +6,8 @@ picked or retouched: each is the one picture its prompt and seed gave.
 
 They were made on engine 7beb5243, which encodes the prompt on Metal as well as running the transformer, and made
 again on 6f05bcd9 (the same code rebased), on 198ed906 (rebased again, with the encoder's per-layer check added) and
-on the pinned 92c82988 (rebased onto a later main) with byte-identical results. Times are not given here: the runs
-shared the Mac with other builds.
+on 92c82988 (rebased onto a later main) and on the pinned bd10bd9b (TensorFold main, with #1512 landed) with
+byte-identical results. Times are not given here: the runs shared the Mac with other builds.
 The recipe's measured speeds are in the [README](../../README.md).
 
 | picture | size | seed |

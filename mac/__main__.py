@@ -1,4 +1,5 @@
-"""MOSS-Image-Base on an M5 Mac: the transformer on TensorFold's Metal runtime, the encoder and decoder in torch.
+"""MOSS-Image (Base or SFT) on an M5 Mac: the transformer and prompt encoder on TensorFold's Metal runtime, the
+starting noise and the decoder in torch. CHECKPOINT=sft (or `checkpoint` in local.toml) picks the SFT weights.
 
   python3 -m mac setup                     torch, diffusers and transformers (pinned) in a venv under tf_cache
   python3 -m mac build                     the pinned engine's tf-moss-image, under tf_cache
@@ -80,16 +81,17 @@ def generate(s: Settings, args) -> int:
         run(tool(s, "decode", s.model, Path(tmp) / "latents.f32", out, "--device", s.device, *size))
         done = time.perf_counter()
         timing = json.loads((Path(tmp) / "run.json").read_text())
-    print(json.dumps({"image": str(out), "start_s": round(started - mark, 1), "encode_s": timing["encode_s"],
-                      "transformer_s": timing["denoise_s"], "engine_process_s": round(denoised - started, 1),
-                      "decode_s": round(done - denoised, 1)}))
+    print(json.dumps({"image": str(out), "checkpoint": s.checkpoint, "start_s": round(started - mark, 1),
+                      "encode_s": timing["encode_s"], "transformer_s": timing["denoise_s"],
+                      "engine_process_s": round(denoised - started, 1), "decode_s": round(done - denoised, 1)}))
     return 0
 
 
 def check(s: Settings, args) -> int:
     need(s)
     name = Path(args.prompt_file).stem
-    out = (ROOT / "out" / f"check-{name}-{args.width}x{args.height}-{args.seed}").resolve()
+    tag = "" if s.checkpoint == "base" else f"-{s.checkpoint}"
+    out = (ROOT / "out" / f"check-{name}-{args.width}x{args.height}-{args.seed}{tag}").resolve()
     out.mkdir(parents=True, exist_ok=True)
     size = ["--width", str(args.width), "--height", str(args.height)]
     run(tool(s, "case", s.model, out, "--prompt-file", Path(args.prompt_file).resolve(), "--seed", str(args.seed),

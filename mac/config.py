@@ -10,9 +10,13 @@ ROOT = Path(__file__).resolve().parent.parent
 
 @dataclass
 class Settings:
-    model_repo: str = ""
-    model_revision: str = ""
-    model_dir: str = ""
+    checkpoint: str = "base"
+    base_repo: str = ""
+    base_revision: str = ""
+    base_dir: str = ""
+    sft_repo: str = ""
+    sft_revision: str = ""
+    sft_dir: str = ""
     tensorfold_src: str = ""
     tensorfold_sha: str = ""
     zig: str = "zig"
@@ -31,9 +35,23 @@ class Settings:
     def path(p: str) -> Path:
         return Path(os.path.expanduser(p))
 
+    def pick(self, what: str) -> str:
+        """The chosen checkpoint's repo, revision or dir."""
+        if self.checkpoint not in ("base", "sft"):
+            raise SystemExit(f"checkpoint must be base or sft, not {self.checkpoint!r}")
+        return getattr(self, f"{self.checkpoint}_{what}")
+
+    @property
+    def model_repo(self) -> str:
+        return self.pick("repo")
+
+    @property
+    def model_revision(self) -> str:
+        return self.pick("revision")
+
     @property
     def model(self) -> Path:
-        return self.path(self.model_dir)
+        return self.path(self.pick("dir"))
 
     @property
     def cache(self) -> Path:
@@ -68,6 +86,8 @@ def load() -> Settings:
     for f in fields(Settings):
         if f.name in values:
             setattr(s, f.name, values[f.name])
+        elif f.name == "base_dir" and "model_dir" in values:  # local.toml before the SFT checkpoint was added
+            s.base_dir = values["model_dir"]
         env = os.environ.get(f.name.upper())
         if env is not None:
             setattr(s, f.name, type(getattr(s, f.name))(env))

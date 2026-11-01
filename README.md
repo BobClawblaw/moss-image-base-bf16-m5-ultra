@@ -1,7 +1,9 @@
-# MOSS-Image-Base on one M5 Ultra (TensorFold Metal, bf16 as published)
+# MOSS-Image-Base and -SFT on one M5 Ultra (TensorFold Metal, bf16 as published)
 
 Makes pictures with [MOSS-Image-Base](https://huggingface.co/OpenMOSS-Team/MOSS-Image-Base), OpenMOSS's 5B
-flow-matching text-to-image model, from its release as published. The 5B joint transformer, which does nearly all
+flow-matching text-to-image model, and its fine-tuned
+[MOSS-Image-SFT](https://huggingface.co/OpenMOSS-Team/MOSS-Image-SFT) ([below](#moss-image-sft)), each from its
+release as published. The 5B joint transformer, which does nearly all
 the work, and the prompt encoder (the checkpoint's Qwen3.5 text model) run on TensorFold's Metal runtime (the
 `moss_image` family). The image decoder (FLUX.2's small decoder) and the starting noise run in torch, through the
 publisher's own `pipeline_moss_image.py`. Nothing is converted: the transformer and encoder are bf16 and the decoder
@@ -9,10 +11,10 @@ float32, as released.
 
 The torch steps import and run Python from the checkpoint itself: its `pipeline_moss_image.py`, through
 `tools/zig/moss_image_case.py` in the engine's tree. That tool checks the file's sha256 against revision 85975793's
-(`1dac1aca…8b31`) before importing it, and refuses any other file. Download the checkpoint at that revision (below).
+(`1dac1aca…8b31`) before importing it, and refuses any other file; SFT's revision f972bd4b ships the identical file.
+Download the checkpoint at its pinned revision (below).
 
-The transformer is on [TensorFold](https://github.com/ashhart/TensorFold) main (#1457); the encoder is on branch
-`moss-image-encoder` of [BobClawblaw/TensorFold](https://github.com/BobClawblaw/TensorFold), not yet on main. This
+The transformer and the encoder are on [TensorFold](https://github.com/ashhart/TensorFold) main (#1457, #1512). This
 recipe builds its pinned commit. It runs one picture at a time from the command line; there is no server.
 
 ![The fox prompt at 1024x1024, seed 42: the publisher's torch pipeline (left), ours (right)](evidence/fox-1024x1024-42/side.png)
@@ -25,12 +27,19 @@ Needs an M5 Mac: the engine runs on the M5's tensor units and refuses an earlier
 Python 3.11+, git, `hf` and [Zig 0.17.0](https://ziglang.org/download/), and about 26 GB of disk for the checkpoint.
 
 ```bash
-git clone https://github.com/BobClawblaw/TensorFold ~/github/TensorFold
+git clone https://github.com/ashhart/TensorFold ~/github/TensorFold
 hf download OpenMOSS-Team/MOSS-Image-Base --revision 85975793d8b3d432f1b6e27f352abaa4c2a4c0d3 --local-dir ~/models/MOSS-Image-Base
 cp local.example.toml local.toml      # then set zig, python (3.11+) and paths, if yours differ
 python3 -m mac setup                  # torch 2.14.1, diffusers 0.42.0, transformers 5.21.0 in a venv under ~/.cache/moss-image
 python3 -m mac build                  # the pinned engine's tf-moss-image
 python3 -m mac generate "A red fox sitting in fresh snow at dawn" -o fox.png
+```
+
+For the SFT weights, download them too and set `checkpoint = "sft"` in `local.toml` (or `CHECKPOINT=sft` for one run):
+
+```bash
+hf download OpenMOSS-Team/MOSS-Image-SFT --revision f972bd4b4b9e3852133cc5da954d87bc32cd8fb9 --local-dir ~/models/MOSS-Image-SFT
+CHECKPOINT=sft python3 -m mac generate "A red fox sitting in fresh snow at dawn" -o fox-sft.png
 ```
 
 `python3 -m mac status` shows the pins and what is built; `python3 -m mac check PROMPT_FILE` compares the
@@ -43,6 +52,7 @@ name in upper case overrides both (`STEPS=30 python3 -m mac generate "..."`). `g
 
 | setting | default | |
 |---|---|---|
+| `checkpoint` | base | `base` or `sft`; `base_dir` and `sft_dir` say where each is |
 | `width`, `height` | 1024, 1024 | positive multiples of 16 |
 | `steps` | 50 | Euler steps on the scheduler's shifted grid (shift 5) |
 | `seed` | 42 | the starting noise, drawn in float32 on the CPU as the pipeline draws it |
@@ -51,7 +61,8 @@ name in upper case overrides both (`STEPS=30 python3 -m mac generate "..."`). `g
 
 The guidance is the card's and fixed: scale 3, two transformer passes a step, the negative one skipping block 22.
 
-**Time and memory** for a 1024x1024 picture, three prompts on the pinned engine with no other GPU work: 1.9 to 2.3 s
+**Time and memory** for a 1024x1024 picture with the Base weights, three prompts on engine 92c82988 with no other GPU
+work (the pinned bd10bd9b remakes the gallery byte for byte): 1.9 to 2.3 s
 for torch to draw the starting noise and the schedule, then the engine's process (49 to 50 s): 0.6 s to load the
 encoder and 0.24 to 0.26 s to encode both prompts, then 47 to 48 s for the transformer's 50 steps (100 passes). Then
 2.4 to 2.5 s for torch to decode. The engine's process peaks at a 16.7 GB footprint, the encoder's 16 GB of bf16
@@ -60,8 +71,9 @@ weights; it frees them before loading the transformer (9.5 GB, 11.3 GB at its pe
 ## What works, and how it was checked
 
 All on one M5 Ultra (256 GB, macOS 27), checkpoint revision 85975793. The transformer was measured on engine commit
-772283b6; TensorFold main's 2551c573, then 6f05bcd9 (which adds the encoder), 198ed906 and the pinned 92c82988, give
-the identical latents from torch's prompt rows. The reference is the checkpoint's own pipeline on torch 2.14.1 with
+772283b6; TensorFold main's 2551c573, then 6f05bcd9 (which adds the encoder), 198ed906 and 92c82988, give the
+identical latents from torch's prompt rows. The pinned bd10bd9b (main, with #1512 landed) remakes the
+[gallery](evidence/gallery/README.md) byte for byte. The reference is the checkpoint's own pipeline on torch 2.14.1 with
 MPS in bf16, run by `tools/zig/moss_image_case.py` in the engine's tree. MPS has no float64, so the case tool computes
 the time sinusoid (float64 by the publisher) on the host; every other step runs unchanged.
 
@@ -101,6 +113,31 @@ Two cases at the card's defaults:
 `evidence/` holds each case's `summary.json`, the engine's `run.json` (every step's comparison and timing), the
 reference's `reference.json` and the side-by-side pictures.
 
+## MOSS-Image-SFT
+
+OpenMOSS-Team/MOSS-Image-SFT at revision f972bd4b is MOSS-Image-Base fine-tuned. Only the transformer's three weight
+files differ; the prompt encoder, the decoder, every config, the tokenizer and `pipeline_moss_image.py` are byte for
+byte Base's, and the card's sampling is the same (50 steps, guidance 3, shift 5, the negative pass skipping block 22).
+The engine runs it unchanged. Checked on the pinned bd10bd9b with `CHECKPOINT=sft python3 -m mac check --exact`, at
+the same two cases as Base:
+
+| case | each step (worst cosine, prompt / negative) | ours vs torch bf16 | torch bf16 vs float32 | ours vs float32 |
+|---|---|---|---|---|
+| fox, 1024x1024, seed 42 | 0.99963 / 0.99963 | 43.64 dB | 21.50 dB | 21.58 dB |
+| sticky note, 1200x880, seed 7 | 0.99966 / 0.99967 | 22.78 dB | 22.19 dB | 30.25 dB |
+
+Every step matches torch's at Base's level. As pictures, SFT is the more sensitive to rounding in these two cases:
+fifty guided steps carry bf16-sized differences in the prompt rows into a different layout. On the fox both bf16 runs land as far
+from the float32 run (`--exact`, encoder and transformer in float32) as each other. On the sticky note, ours moves
+the fridge right, and the float32 run moves it the same way: ours is 30.25 dB from it, torch bf16's 22.19 dB. Our
+starting noise is torch's bit for bit (the case tool draws it), so the difference is the prompt rows; with torch's own
+rows, our pictures are 48.03 dB (fox) and 30.80 dB (sticky note) from torch's. `evidence/sft/` holds each case's
+`summary.json`, `run.json` and the pictures side by side (`side.png` against torch bf16, `side-fp32.png` against
+float32), and a [gallery](evidence/sft/gallery/README.md) of the same five prompts and seeds as Base's.
+
+Time: the transformer's 50 steps took 47.2 to 47.4 s at 1024x1024 over the gallery's three square prompts, as Base's
+do; the runs shared the Mac with a resident image server, so these are not the README's speed figures.
+
 ## What it does not do
 
 - **The decoder is not ported here.** It runs in torch (MPS), 2.5 s a picture; a native decoder is a separate branch.
@@ -108,13 +145,14 @@ reference's `reference.json` and the side-by-side pictures.
 - **Quality suites:** no image-quality benchmark was run (GenEval, DPG and the like). The checks above show the
   transformer computes what the publisher's pipeline computes, to bf16 rounding; the model's quality is the
   publisher's.
-- **Batches, LoRA and the extra skip-layer guidance** (`slg_layers`) are not wired. The SFT checkpoint is untested.
+- **Batches, LoRA and the extra skip-layer guidance** (`slg_layers`) are not wired.
 
 ## Pins
 
 | | |
 |---|---|
 | checkpoint | `OpenMOSS-Team/MOSS-Image-Base` @ `85975793d8b3d432f1b6e27f352abaa4c2a4c0d3` (Apache 2.0) |
-| engine | BobClawblaw/TensorFold @ `92c829887ed66c685ab800e36376a18bc1ddf44d` (branch `moss-image-encoder`) |
+| checkpoint | `OpenMOSS-Team/MOSS-Image-SFT` @ `f972bd4b4b9e3852133cc5da954d87bc32cd8fb9` (Apache 2.0) |
+| engine | ashhart/TensorFold @ `bd10bd9bdda6c350ff2dfc5873526b7b6acb59f9` (main) |
 | torch side | torch 2.14.1, diffusers 0.42.0, transformers 5.21.0 |
 | Zig | 0.17.0 |
